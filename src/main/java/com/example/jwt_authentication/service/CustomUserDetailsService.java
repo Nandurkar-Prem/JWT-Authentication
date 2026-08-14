@@ -4,7 +4,9 @@ import com.example.jwt_authentication.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
     //This is a very important class to understand because Spring Security needs data in it's
     //Own format this class asks Spring Security for a username and it goes to DB and find that user
