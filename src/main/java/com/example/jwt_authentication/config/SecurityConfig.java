@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")//This will only allow an ADMIN to access any endpoint
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
