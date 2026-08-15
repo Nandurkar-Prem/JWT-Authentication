@@ -4,6 +4,7 @@ import com.example.jwt_authentication.dto.LoginRequest;
 import com.example.jwt_authentication.dto.RegisterRequest;
 import com.example.jwt_authentication.entity.User;
 import com.example.jwt_authentication.repository.UserRepository;
+import com.example.jwt_authentication.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,11 +17,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     public void register(RegisterRequest request){
@@ -38,7 +41,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public void login(LoginRequest request){
+    public String login(LoginRequest request){
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -46,5 +49,9 @@ public class AuthService {
                                 request.getPassword()
                         )
                 );
+
+        return jwtService.generateToken(
+                authentication.getName()
+        );
     }
 }
