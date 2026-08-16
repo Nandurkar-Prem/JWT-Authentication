@@ -10,7 +10,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-
 @Service
 public class JwtService {
 
@@ -20,50 +19,54 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    public String generateToken(String username){
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
+    public String generateToken(String username) {
 
         return Jwts.builder()
                 .subject(username)
-                .issuedAt(new Date())//This method records the time when JWT is created
-                .expiration(new Date(System.currentTimeMillis() + expiration))//Here we are setting the expiration time
-                .signWith(key)//This method signs the token using our secret key.
-                .compact();//This method converts everything into a familiar JWT Token {HEADER.PAYLOAD.SIGNATURE}
+                .issuedAt(new Date())
+                .expiration(
+                        new Date(System.currentTimeMillis() + expiration)
+                )
+                .signWith(getSigningKey())
+                .compact();
     }
 
     public String extractUsername(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
 
         return Jwts.parser()
-                .verifyWith(key)
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(
+            String token,
+            UserDetails userDetails) {
+
         String username = extractUsername(token);
+
         return username.equals(userDetails.getUsername())
                 && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
+
         Date expiration = Jwts.parser()
-                .verifyWith(key)
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getExpiration();
 
         return expiration.before(new Date());
+    }
+
+    private SecretKey getSigningKey() {
+
+        return Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }
