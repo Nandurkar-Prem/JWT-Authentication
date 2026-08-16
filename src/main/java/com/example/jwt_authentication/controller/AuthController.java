@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.jwt_authentication.dto.LoginResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,12 +33,11 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<String> refresh(@RequestBody RefreshTokenRequest request) {
-        String accessToken =
-                authService.refreshAccessToken(
-                        request.getRefreshToken()
-                );
-        return ResponseEntity.ok(accessToken);
+    public ResponseEntity<LoginResponse> refresh(@RequestBody RefreshTokenRequest request) {
+        LoginResponse response = authService.refreshAccessToken(
+                request.getRefreshToken()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")

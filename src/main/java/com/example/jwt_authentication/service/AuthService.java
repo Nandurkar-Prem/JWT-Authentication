@@ -77,12 +77,20 @@ public class AuthService {
         );
     }
 
-    public String refreshAccessToken(String token) {
+    public LoginResponse refreshAccessToken(String token) {
         RefreshToken refreshToken =
                 refreshTokenService.findByToken(token);
         refreshTokenService.verifyExpiration(refreshToken);
         User user = refreshToken.getUser();
-        return jwtService.generateToken(user.getUsername());
+        String accessToken =
+                jwtService.generateToken(user.getUsername());
+        refreshTokenService.deleteByToken(token);
+        RefreshToken newRefreshToken =
+                refreshTokenService.createRefreshToken(user);
+        return new LoginResponse(
+                accessToken,
+                newRefreshToken.getToken()
+        );
     }
 
     public void logout(String refreshToken) {
