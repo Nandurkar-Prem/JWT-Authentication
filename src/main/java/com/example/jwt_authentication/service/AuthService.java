@@ -27,6 +27,10 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request){
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+
         User user = new User();
 
         user.setUsername(request.getUsername());

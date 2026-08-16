@@ -2,6 +2,7 @@ package com.example.jwt_authentication.controller;
 
 import com.example.jwt_authentication.dto.RegisterRequest;
 import com.example.jwt_authentication.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);//Register request is a DTO we are using it to get only required fields in the request
         return ResponseEntity.ok("User registered successfully");
     }
