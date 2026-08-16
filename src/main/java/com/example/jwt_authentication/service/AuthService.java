@@ -1,7 +1,9 @@
 package com.example.jwt_authentication.service;
 
 import com.example.jwt_authentication.dto.LoginRequest;
+import com.example.jwt_authentication.dto.LoginResponse;
 import com.example.jwt_authentication.dto.RegisterRequest;
+import com.example.jwt_authentication.entity.RefreshToken;
 import com.example.jwt_authentication.entity.User;
 import com.example.jwt_authentication.repository.UserRepository;
 import com.example.jwt_authentication.security.JwtService;
@@ -18,12 +20,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public void register(RegisterRequest request){
@@ -45,7 +49,8 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public String login(LoginRequest request){
+    public LoginResponse login(LoginRequest request) {
+
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -54,8 +59,33 @@ public class AuthService {
                         )
                 );
 
-        return jwtService.generateToken(
+        User user = userRepository.findByUsername(
                 authentication.getName()
+        ).orElseThrow(() ->
+                new RuntimeException("User not found")
         );
+
+        String accessToken =
+                jwtService.generateToken(authentication.getName());
+
+        RefreshToken refreshToken =
+                refreshTokenService.createRefreshToken(user);
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken.getToken()
+        );
+    }
+
+    public String refreshAccessToken(String token) {
+        RefreshToken refreshToken =
+                refreshTokenService.findByToken(token);
+        refreshTokenService.verifyExpiration(refreshToken);
+        User user = refreshToken.getUser();
+        return jwtService.generateToken(user.getUsername());
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.deleteByToken(refreshToken);
     }
 }

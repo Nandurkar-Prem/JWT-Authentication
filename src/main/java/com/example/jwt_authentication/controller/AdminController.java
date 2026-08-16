@@ -1,5 +1,6 @@
 package com.example.jwt_authentication.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin")
 public class AdminController {
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/dashboard")
     public String dashboard(){
         return "Now you are at Admin Dashboard!";

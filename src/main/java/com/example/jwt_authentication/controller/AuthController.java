@@ -1,6 +1,6 @@
 package com.example.jwt_authentication.controller;
 
-import com.example.jwt_authentication.dto.RegisterRequest;
+import com.example.jwt_authentication.dto.*;
 import com.example.jwt_authentication.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.jwt_authentication.dto.LoginRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,8 +26,23 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login( @RequestBody LoginRequest request) {
-        String token = authService.login(request);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refresh(@RequestBody RefreshTokenRequest request) {
+        String accessToken =
+                authService.refreshAccessToken(
+                        request.getRefreshToken()
+                );
+        return ResponseEntity.ok(accessToken);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody LogoutRequest request) {
+        authService.logout(request.getRefreshToken());
+        return ResponseEntity.ok("Logout Successful");
     }
 }
