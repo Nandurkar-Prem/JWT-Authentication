@@ -1,5 +1,6 @@
 package com.example.jwt_authentication.security;
 
+import com.example.jwt_authentication.exception.ApiError;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.JwtException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -19,13 +22,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            UserDetailsService userDetailsService) {
+            UserDetailsService userDetailsService, ObjectMapper objectMapper) {
 
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -44,30 +49,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = authHeader.substring(7);
 
-        String username = jwtService.extractUsername(jwt);
+        try {
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(username);
+            String username = jwtService.extractUsername(jwt);
 
-        if (jwtService.isTokenValid(jwt, userDetails)
-                && SecurityContextHolder.getContext()
-                .getAuthentication() == null) {
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(username);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+            if (jwtService.isTokenValid(jwt, userDetails)
+                    && SecurityContextHolder.getContext()
+                    .getAuthentication() == null) {
 
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource()
-                            .buildDetails(request)
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authentication);
+            }
+
+        } catch (JwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            ApiError error = new ApiError(
+                    401,
+                    "Unauthorized",
+                    "Invalid or expired JWT"
             );
-
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
+            response.getWriter().write(
+                    objectMapper.writeValueAsString(error)
+            );
+            return;
         }
 
         filterChain.doFilter(request, response);
