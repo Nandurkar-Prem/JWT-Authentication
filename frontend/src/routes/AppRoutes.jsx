@@ -1,4 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
+
+import AppLayout from "../components/AppLayout";
+import AuthLayout from "../components/AuthLayout";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -10,15 +13,24 @@ import AccessDenied from "../pages/AccessDenied";
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* Root */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/admin" element={<AdminDashboard />} />
+      {/* Authentication Pages */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
 
-      <Route path="/access-denied" element={<AccessDenied />} />
+      {/* Application Pages */}
+      <Route element={<AppLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
+      </Route>
 
+      {/* Unknown URLs */}
       <Route path="*" element={<AccessDenied />} />
     </Routes>
   );
